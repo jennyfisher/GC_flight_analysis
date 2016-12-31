@@ -37,7 +37,7 @@ def map_gc_diff(varname,filename1,filenam2, percent=False, savefig=False,
     # Average over multiple files
     first = True
     for f in filename1:
-        print "Old Data from file: "+f
+        print ("Old Data from file: "+f)
         GC = read_gc_nc(varname,f)    
         tdata = extract_gc_2d_lat_lon(GC,lev=lev,altrange=altrange)
         if first:
@@ -49,7 +49,7 @@ def map_gc_diff(varname,filename1,filenam2, percent=False, savefig=False,
     
     first = True
     for f in filename2:
-        print "New Data from file: "+f
+        print ("New Data from file: "+f)
         GC = read_gc_nc(varname,f)    
         tdata = extract_gc_2d_lat_lon(GC,lev=lev,altrange=altrange)
         if first:
@@ -83,7 +83,7 @@ def map_gc_diff(varname,filename1,filenam2, percent=False, savefig=False,
         maxdata = cbar.max()
         mindata = cbar.min()
     else:
-        print "Specify cbar as 1 or 2 values"
+        print ("Specify cbar as 1 or 2 values")
         return
 
     

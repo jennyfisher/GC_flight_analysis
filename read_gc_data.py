@@ -16,7 +16,7 @@ def read_gc_nc(varname,filename,ppt=True):
        Default is to convert to ppt from ppb but this can be overwritten
        with ppb=False"""
 
-    f = netCDF4.Dataset('model/'+filename,'r')
+    f = netCDF4.Dataset(filename,'r')
 
     # Essential variables first
     glon = f.variables['lon']
@@ -42,7 +42,11 @@ def read_gc_nc(varname,filename,ppt=True):
     if (varname.upper() == "C1-C3_RONO2"):
         gdata =  ( numpy.array(f.variables['IJ_AVG_S__MENO3']) +
                    numpy.array(f.variables['IJ_AVG_S__ETNO3']) +
-                   numpy.array(f.variables['IJ_AVG_S__PRNO3']) )
+                   numpy.array(f.variables['IJ_AVG_S__IPRNO3']) +
+                   numpy.array(f.variables['IJ_AVG_S__NPRNO3']) )
+    elif (varname.upper() == "PRNO3"):
+        gdata =  ( numpy.array(f.variables['IJ_AVG_S__IPRNO3']) +
+                   numpy.array(f.variables['IJ_AVG_S__NPRNO3']) )
     elif (varname.upper() == "NOX"):
         gdata =  ( numpy.array(f.variables['IJ_AVG_S__NO']) +
                    numpy.array(f.variables['IJ_AVG_S__NO2']) )
@@ -52,7 +56,8 @@ def read_gc_nc(varname,filename,ppt=True):
         conv = 1e0
         unit = 'ppt / ppt'
     elif (varname.upper() == "PRNO3_C3H8"):
-        gdata =  ( numpy.array(f.variables['IJ_AVG_S__PRNO3']) /
+        gdata =  ( (numpy.array(f.variables['IJ_AVG_S__IPRNO3']) +
+                    numpy.array(f.variables['IJ_AVG_S__NPRNO3'])) /
                    numpy.array(f.variables['IJ_AVG_S__C3H8']) )
         conv = 1e0
         unit = 'ppt / ppt'
@@ -77,10 +82,10 @@ def extract_gc_2d_lat_lon(gcdatablock,lev=None,altrange=None):
     gcalt =gcdatablock["alt"]
 
     if hasattr(lev, "__len__") and (altrange is not None):
-        print "lev takes precedence over altrange; using lev!"
+        print ("lev takes precedence over altrange; using lev!")
         altrange=None
     elif (lev is None) and (altrange is None):
-        print "no altitude specified; using surface!"
+        print ("no altitude specified; using surface!")
         lev = 0
 
     if (altrange is not None):
@@ -125,16 +130,16 @@ def extract_gc_1d_alt(gcdatablock,lonrange=None,latrange=None,
     gclat =gcdatablock["lat"]
        
     if (lonrange is None):
-        print "No longitudes specified: using global!"
+        print ("No longitudes specified: using global!")
         lonrange = [-180,180]
     if (latrange is None):
-        print "No latitudes specified: using global!"
+        print ("No latitudes specified: using global!")
         latrange = [-90,90]
     if len(lonrange) != 2:
-        print "Specify longitudes as [lon1,lon2]"
+        print ("Specify longitudes as [lon1,lon2]")
         return
     if len(latrange) != 2:
-        print "Specify latitudes as [lat1,lat2]"
+        print ("Specify latitudes as [lat1,lat2]")
         return
         
     # convert to numpy arrays

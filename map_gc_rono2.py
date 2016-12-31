@@ -193,20 +193,25 @@ def profile_gc(varname,filename,savefig=False,airdata=None,airname='',
     for f in filename:
         GC = read_gc_nc(varname,f)
         unit = GC["unit"]
-        tdata, alt = extract_gc_1d_alt(GC,lonrange=lonrange,latrange=latrange,
+        tdata, talt = extract_gc_1d_alt(GC,lonrange=lonrange,latrange=latrange,
                                   binned=True,dalt=dalt)
         if first:
             data = tdata
+            alt = talt
             first = False
         else:
             # sometimes something weird happens with altitude dimension...
             if data.shape[-1] < tdata.shape[-1]:
                 data = data + tdata[:,:data.shape[-1]]
+                alt = alt + talt[:alt.shape[-1]]
             elif data.shape[-1] > tdata.shape[-1]:
                 data[:,:tdata.shape[-1]] = data[:,:tdata.shape[-1]] + tdata
+                alt[:talt.shape[-1]] = alt[:talt.shape[-1]] + talt
             else:
                 data = data + tdata
+                alt = alt + talt
     data = data / len(filename)    
+    alt = alt / len(filename)    
     
 #    # Read data & extract variables
 #    for f in filename:

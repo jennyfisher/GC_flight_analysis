@@ -18,7 +18,7 @@ def read_ict(fname):
 
     # Read first header line to get header count
     header = file.readline()
-    n_hdr  = long((header.split(', '))[0])
+    n_hdr  = int((header.split(', '))[0])
 
     # Read 12th line to get missing values
     for i in range(11):
