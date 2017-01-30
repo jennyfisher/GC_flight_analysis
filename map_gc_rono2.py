@@ -12,6 +12,10 @@ import matplotlib
 from mpl_toolkits.basemap import Basemap, addcyclic
 from scipy.stats import binned_statistic
 
+# for testing
+import time
+#
+
 # My packages
 from read_airborne_data import *
 from read_gc_data import *
@@ -173,13 +177,15 @@ def map_gc(varname,filename,savefig=False,airdata=None,airname='',
 def profile_gc(varname,filename,savefig=False,airdata=None,airname='',
                latrange=None,lonrange=None,altrange=None,dalt=1.0,
                mindata=None,maxdata=None,outline=True,
-               figname=None,title=''):
+               figname=None,title='',filename2=[],ftype="netcdf"):
     
     """
     This function makes an altitude profile of a given GEOS-Chem variable
     averaged globally or over a region (specified with latrange, lonrange.
     
     If more than one filename is specified, use the mean over all files.    
+
+    To show a second set of model files, use filename2=[file1,file2,...].
     
     To specify altitude bounds for profile, use altrange=[X,Y].
     
@@ -191,7 +197,13 @@ def profile_gc(varname,filename,savefig=False,airdata=None,airname='',
     # Average over multiple files
     first = True
     for f in filename:
-        GC = read_gc_nc(varname,f)
+        if ftype == "netcdf":
+            GC = read_gc_nc(varname,f)
+        elif ftype == "bpch":
+            GC = read_gc_bpch(varname,f)
+        else:
+            sys.exit("file type not allowed!")
+
         unit = GC["unit"]
         tdata, talt = extract_gc_1d_alt(GC,lonrange=lonrange,latrange=latrange,
                                   binned=True,dalt=dalt)
@@ -212,14 +224,45 @@ def profile_gc(varname,filename,savefig=False,airdata=None,airname='',
                 alt = alt + talt
     data = data / len(filename)    
     alt = alt / len(filename)    
+        
+    # KLUDGE! fix issue where one alt bin undefined
+    if numpy.isnan(data[1,8]):
+        data[:,8] = numpy.mean([data[:,7],data[:,9]],axis=0)
     
-#    # Read data & extract variables
-#    for f in filename:
-#        GC = read_gc_nc(varname,f)
-#
-#    # data columns are 25th, 50th, 75th percentiles   
-#    data, alt = extract_gc_1d_alt(GC,lonrange=lonrange,latrange=latrange,
-#                                  binned=True,dalt=dalt)
+    # Second model profile?
+    if len(filename2) > 0:
+        first = True
+        for f in filename2:
+            if ftype == "netcdf":
+                GC2 = read_gc_nc(varname,f)
+            elif ftype == "bpch":
+                GC2 = read_gc_bpch(varname,f)
+            else:
+                sys.exit("file type not allowed!")
+            unit = GC2["unit"]
+            tdata, talt = extract_gc_1d_alt(GC2,lonrange=lonrange,latrange=latrange,
+                                      binned=True,dalt=dalt)
+            if first:
+                data2 = tdata
+                alt2 = talt
+                first = False
+            else:
+                # sometimes something weird happens with altitude dimension...
+                if data2.shape[-1] < tdata.shape[-1]:
+                    data2 = data2 + tdata[:,:data2.shape[-1]]
+                    alt2 = alt2 + talt[:alt2.shape[-1]]
+                elif data2.shape[-1] > tdata.shape[-1]:
+                    data2[:,:tdata.shape[-1]] = data2[:,:tdata.shape[-1]] + tdata
+                    alt2[:talt.shape[-1]] = alt2[:talt.shape[-1]] + talt
+                else:
+                    data2 = data2 + tdata
+                    alt2 = alt2 + talt
+        data2 = data2 / len(filename2)    
+        alt2 = alt2 / len(filename2)    
+
+        # KLUDGE! fix issue where one alt bin undefined
+        if numpy.isnan(data2[1,8]):
+            data2[:,8] = numpy.mean([data2[:,7],data2[:,9]],axis=0)
     
     # Get min and max data values from GC if needed
     if mindata is None:
@@ -230,12 +273,6 @@ def profile_gc(varname,filename,savefig=False,airdata=None,airname='',
     # Get altitude range if needed
     if altrange is None:
         altrange=[alt.min(),alt.max()]
-        
-    # KLUDGE! fix issue where one alt bin undefined
-#    ind = numpy.isnan(data[1,:])
-#    data[1,ind[0]]=numpy.mean([data[1,ind[0]-1],data[1,ind[0]+1]])
-    if numpy.isnan(data[1,8]):
-        data[:,8] = numpy.mean([data[:,7],data[:,9]],axis=0)
 
     f=pyplot.figure()
     
@@ -244,9 +281,15 @@ def profile_gc(varname,filename,savefig=False,airdata=None,airname='',
     pyplot.fill_betweenx(alt,data[0,:],data[2,:],color='red',alpha=0.5)
     pyplot.xlim([mindata,maxdata])
     pyplot.ylim(altrange)
+    pyplot.minorticks_on()
     pyplot.ylabel('Altitude (km)')
     pyplot.xlabel(varname+' ('+unit+')')
     pyplot.title(title)
+    
+    # plot a second model profile?
+    if len(filename2) > 0:
+        pyplot.plot(data2[1,:],alt2,'-b',lw=2)
+        pyplot.fill_betweenx(alt2,data2[0,:],data2[2,:],color='blue',alpha=0.5)
     
     # get the aircraft data to overplot
     if airdata is not None:

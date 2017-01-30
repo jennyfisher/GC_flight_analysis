@@ -8,6 +8,8 @@ Created on Wed Jun 22 10:07:07 2016
 import numpy
 import netCDF4
 
+from PseudoNetCDF import PNC
+
 def read_gc_nc(varname,filename,ppt=True):
     
     """Read a GEOS-Chem netcdf file created using BPCH2COARDS and extract
@@ -63,6 +65,69 @@ def read_gc_nc(varname,filename,ppt=True):
         unit = 'ppt / ppt'
     else:
         gdata = numpy.array(f.variables['IJ_AVG_S__'+varname.upper()])
+    
+    # apply unit conversion of required
+    gdata = gdata * conv    
+    
+    return {"data":gdata, "lon":glon, "lat":glat, "alt":galt, "bh":gbxht,
+            "unit":unit}
+
+def read_gc_bpch(varname,filename,ppt=True):
+    
+    """Read a GEOS-Chem BPCH file created directly from model and extract
+       lon, lat, altitude (from boxheight), and data field.
+       
+       Default is to convert to ppt from ppb but this can be overwritten
+       with ppb=False"""
+
+    args = PNC("--format=bpch,nogroup=('IJ-AVG-$','BXHGHT-$',)",filename)
+    f = args.ifiles[0]
+
+    # Essential variables first
+    glon = f.variables['longitude']
+    glat = f.variables['latitude']
+    gbxht = f.variables['BXHEIGHT']
+    
+    # use boxheight variable to calculate altitude
+    galt = numpy.zeros(gbxht.shape)
+    nlev=galt.shape[1]
+    for ll in range(nlev):
+        # alt is cumulative sum, convert to m
+        galt[:,ll,:,:] = numpy.sum(gbxht[:,0:ll,:,:],axis=1)*1e-3
+
+    # conv is factor to convert from ppb if needed
+    # defaults to ppt but can be set otherwise, as in special cases
+    if ppt:
+        conv = 1e3
+        unit = 'ppt'
+    else:
+        conv = 1e0
+
+    # Get data - deal with "special" fields first
+    if (varname.upper() == "C1-C3_RONO2"):
+        gdata =  ( numpy.array(f.variables['MENO3']) +
+                   numpy.array(f.variables['ETNO3']) +
+                   numpy.array(f.variables['IPRNO3']) +
+                   numpy.array(f.variables['NPRNO3']) )
+    elif (varname.upper() == "PRNO3"):
+        gdata =  ( numpy.array(f.variables['IPRNO3']) +
+                   numpy.array(f.variables['NPRNO3']) )
+    elif (varname.upper() == "NOX"):
+        gdata =  ( numpy.array(f.variables['NO']) +
+                   numpy.array(f.variables['NO2']) )
+    elif (varname.upper() == "ETNO3_C2H6"):
+        gdata =  ( numpy.array(f.variables['ETNO3']) /
+                   numpy.array(f.variables['C2H6']) )
+        conv = 1e0
+        unit = 'ppt / ppt'
+    elif (varname.upper() == "PRNO3_C3H8"):
+        gdata =  ( (numpy.array(f.variables['IPRNO3']) +
+                    numpy.array(f.variables['NPRNO3'])) /
+                   numpy.array(f.variables['C3H8']) )
+        conv = 1e0
+        unit = 'ppt / ppt'
+    else:
+        gdata = numpy.array(f.variables[varname.upper()])
     
     # apply unit conversion of required
     gdata = gdata * conv    
