@@ -13,9 +13,9 @@ import os
 import sys
 import argparse
 
-from map_gc_rono2 import *
 from read_airborne_data import *
 from read_gc_data import *
+from map_gc_rono2 import *
 
 # Set up arguments to the script
 parser = argparse.ArgumentParser()
@@ -24,7 +24,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("mod_dir", help="specify the name of the directory with model output")
 
 # optional arguments
+parser.add_argument("-d2", "--mod_dir2", help="specify the name of 2nd directory with model output")
 parser.add_argument("-v", "--variables", dest="var", nargs='+', default = None, help="Variable names to plot")
+parser.add_argument("-t", "--ftype", default = "netcdf", help="netcdf or bpch")
 parser.add_argument("--months", type = int, nargs='+', default = [1,13], help="start/end of month(s) to plot -- defaults to full year")
 parser.add_argument("--rundir", dest = "rundir", default = "/short/m19/jaf574/SEAC4RS/runs/", help="location of mod_dir on system; defaults to NCI setup")
 parser.add_argument("--datadir", dest = "datadir", default = "/short/m19/jaf574/data/", help="location of data directories on system; defaults to NCI setup")
@@ -45,13 +47,29 @@ def set_files(month):
     
     filename=[]
     for m in month:
-        filename.append(args.rundir+args.mod_dir+'/gc.2013'+str(m).zfill(2)+'01.nc')
+        if args.ftype == "netcdf":
+            filename.append(args.rundir+args.mod_dir+'/gc.2013'+str(m).zfill(2)+'01.nc')
+        elif args.ftype == "bpch":
+            filename.append(args.rundir+args.mod_dir+'bpch/ctm.bpch.2013'+str(m).zfill(2)+'01')
+        else:
+            sys.exit("file type not allowed!")
+
         if m == 8 or m == 9:
             SEAC4RS=True
         if m == 7 or m == 8:
             FRAPPE=True
             
-    return filename, SEAC4RS, FRAPPE
+    filename2=[]
+    if args.mod_dir2 is not None:
+        for m in month:
+            if args.ftype == "netcdf":
+                filename2.append(args.rundir+args.mod_dir2+'/gc.2013'+str(m).zfill(2)+'01.nc')
+            elif args.ftype == "bpch":
+                filename2.append(args.rundir+args.mod_dir2+'bpch/ctm.bpch.2013'+str(m).zfill(2)+'01')
+            else:
+                sys.exit("file type not allowed!")
+
+    return filename, filename2, SEAC4RS, FRAPPE
 
 
 def read_files_hippo():
@@ -110,8 +128,10 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
             maxdata=0.010
         elif v == 'C1-C3_RONO2':
             maxdata=50
-        elif v == 'MENO3' or v == 'ETNO3' or v == 'PRNO3':
+        elif v == 'MENO3' or v == 'PRNO3':
             maxdata=20
+        elif v == 'ETNO3':
+            maxdata=30
         elif v == 'C3H8':
             maxdata=3000.
         else:
@@ -137,7 +157,8 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
                                   lonrange=lonrange,latrange=latrange,
                                   altrange=altrange,dayrange=dayrange)
                               
-            GC = profile_gc(v,filename,savefig=False,title='HIPPO '+v,
+            GC = profile_gc(v,filename,filename2=filename2,ftype=args.ftype,
+                            savefig=False,title='HIPPO '+v,
                             lonrange=lonrange,latrange=latrange,altrange=altrange,
                             airdata=hdata,airname='HIPPO_',maxdata=maxdata,dalt=dalt)
                               
@@ -149,7 +170,8 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
                                   lonrange=lonrange,latrange=latrange,
                                   altrange=altrange,dayrange=dayrange)
             
-            GC = profile_gc(v,filename,savefig=False,title='SEAC4RS '+v,
+            GC = profile_gc(v,filename,filename2=filename2,ftype=args.ftype,
+                            savefig=False,title='SEAC4RS '+v,
                             lonrange=lonrange,latrange=latrange,altrange=altrange,
                             airdata=sdata,airname='SEAC4RS_',maxdata=maxdata,dalt=dalt)
         
@@ -161,7 +183,8 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
                                   lonrange=lonrange,latrange=latrange,
                                   altrange=altrange,dayrange=dayrange)
             
-            GC = profile_gc(v,filename,savefig=False,title='FRAPPE '+v,
+            GC = profile_gc(v,filename,filename2=filename2,ftype=args.ftype,
+                            savefig=False,title='FRAPPE '+v,
                             lonrange=lonrange,latrange=latrange,altrange=altrange,
                             airdata=fdata,airname='FRAPPE_',maxdata=maxdata,dalt=dalt)
 
@@ -169,7 +192,8 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
         if GConly:
             lonrange=[-180,180]
             latrange=[-90,90]
-            GC = profile_gc(v,filename,savefig=False,title='Global Model '+v,
+            GC = profile_gc(v,filename,filename2=filename2,ftype=args.ftype,
+                            savefig=False,title='Global Model '+v,
                             lonrange=lonrange,latrange=latrange,altrange=altrange,
                             maxdata=maxdata)
 
@@ -219,7 +243,7 @@ seac4rs_obs = None
 frappe_obs = None
 
 # Set-up: Files
-filename, SEAC4RS, FRAPPE = set_files(month)
+filename, filename2, SEAC4RS, FRAPPE = set_files(month)
 if args.FRAPPE:
    frappe_obs = read_files_frappe()
 if args.SEAC4RS:
@@ -233,16 +257,6 @@ if args.FRAPPE or args.SEAC4RS or args.HIPPO:
 else:
     GConly = True
 
-
-# Set-up: Parameters
-
-#var=['MeNO3','EtNO3','PrNO3']
-#var=['C1-C3_RONO2']
-#var=['MeNO3','EtNO3','iPrNO3','nPrNO3']
-#var=['ETNO3','C2H6','ETNO3_C2H6']
-#var=['PRNO3','C3H8','PRNO3_C3H8']
-#var=['C3H8']
-#var=['C3H8','iPrNO3','nPrNO3','PRNO3_C3H8']
 
 
 ##### MAPS OF DIFFERENT SPECIES @ DIFFERENT ALTITUDES & DIFFERENT MONTHS
