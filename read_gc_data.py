@@ -16,7 +16,7 @@ def read_gc_nc(varname,filename,ppt=True):
        lon, lat, altitude (from boxheight), and data field.
        
        Default is to convert to ppt from ppb but this can be overwritten
-       with ppb=False"""
+       with ppt=False"""
 
     f = netCDF4.Dataset(filename,'r')
 
@@ -39,6 +39,17 @@ def read_gc_nc(varname,filename,ppt=True):
         unit = 'ppt'
     else:
         conv = 1e0
+
+    # overwrite for some species !!TODO make this clearer later (and/or convert obs to ppt if needed
+    if (varname.upper() == "ALD2"):
+        conv = 5e-1  # convert from ppb C to ppb ALD2
+        unit = 'ppb'
+    elif (varname.upper() == "ACET"):
+        conv = 1e0/3e0  # convert from ppb C to ppb ACET
+        unit = 'ppb'
+    elif (varname.upper() == "O3"):
+        conv = 1e0  # convert from ppb to ppb
+        unit = 'ppb'
 
     # Get data - deal with "special" fields first
     if (varname.upper() == "C1-C3_RONO2"):
@@ -102,6 +113,17 @@ def read_gc_bpch(varname,filename,ppt=True):
         unit = 'ppt'
     else:
         conv = 1e0
+
+    # overwrite for some species !!TODO make this clearer later (and/or convert obs to ppt if needed
+    if (varname.upper() == "ALD2"):
+        conv = 5e-1  # convert from ppb C to ppb ALD2
+        unit = 'ppb'
+    elif (varname.upper() == "ACET"):
+        conv = 1e0/3e0  # convert from ppb C to ppb ACET
+        unit = 'ppb'
+    elif (varname.upper() == "O3"):
+        conv = 1e0  # convert from ppb to ppb
+        unit = 'ppb'
 
     # Get data - deal with "special" fields first
     if (varname.upper() == "C1-C3_RONO2"):

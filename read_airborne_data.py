@@ -66,7 +66,56 @@ def gcname_to_seacname(argument):
         "C2H6": "Ethane_WAS",
         "c2h6": "Ethane_WAS",
         "C3H8": "Propane_WAS",
-        "c3h8": "Propane_WAS"
+        "c3h8": "Propane_WAS",
+        "ALD2": "Acetaldehyde",
+        "ald2": "Acetaldehyde",
+        "ACET": "Acetone_Propanal",
+        "acet": "Acetone_Propanal",
+        "NO2": "NO2_TDLIF",
+        "no2": "NO2_TDLIF",
+        "PAN": "PAN_GTCIMS",
+        "pan": "PAN_GTCIMS",
+        "O3": "O3_ESRL",
+        "o3": "O3_ESRL"
+    }
+    return switcher.get(argument, origname)
+
+## FRAPPE
+
+
+def gcname_to_frappname(argument):
+    
+    """ Converts from GEOS-Chem species name to FRAPPE data field name"""
+    
+    # Default return original name if not found (may be special case)
+    origname=argument
+    switcher = {
+        "MeNO3": "MeONO2_WAS",
+        "MeNO3".lower(): "MeONO2_WAS",
+        "MeNO3".upper(): "MeONO2_WAS",
+        "EtNO3": "EtONO2_WAS",
+        "EtNO3".lower(): "EtONO2_WAS",
+        "EtNO3".upper(): "EtONO2_WAS",
+        "iPrNO3": "iPrONO2_WAS",
+        "iPrNO3".lower(): "iPrONO2_WAS",
+        "iPrNO3".upper(): "iPrONO2_WAS",
+        "nPrNO3": "nPrONO2_WAS",
+        "nPrNO3".lower(): "nPrONO2_WAS",
+        "nPrNO3".upper(): "nPrONO2_WAS",
+        "C2H6": "Ethane_WAS",
+        "c2h6": "Ethane_WAS",
+        "C3H8": "Propane_WAS",
+        "c3h8": "Propane_WAS",
+        "ALD2": "Acetaldehyde_MixingRatio",
+        "ald2": "Acetaldehyde_MixingRatio",
+        "ACET": "AcetonePropanal_MixingRatio",
+        "acet": "AcetonePropanal_MixingRatio",
+        "NO2": "NO2_MixingRatio",
+        "no2": "NO2_MixingRatio",
+        "PAN": "PAN",
+        "pan": "PAN",
+        "O3": "O3_MixingRatio",
+        "o3": "O3_MixingRatio"
     }
     return switcher.get(argument, origname)
 
@@ -90,18 +139,20 @@ def extract_seac4rs(obs,varname,
     # Fix SEAC4RS longitude ([-180,180] from [0,360])
     slon[slon > 180] = slon[slon > 180] - 360.
     
-    
+    sunit = 'ppt'
+
     # Get data - deal with "special" fields first
     if (varname.upper() == "C1-C3_RONO2"):
         sdata = ( obs["MeONO2_WAS"]    +
                   obs["EtONO2_WAS"]   +
                   obs["iPrONO2_WAS"]+
                   obs["nPrONO2_WAS"] )
-        sunit = 'ppt'
+    elif (varname.upper() == "NOX"):
+        sdata = ( obs["NO2_ESRL"] +
+                  obs["NO_ESRL"]  )*1e3
     elif (varname.upper() == "PRNO3"):
         sdata = ( obs["iPrONO2_WAS"]+
                   obs["nPrONO2_WAS"] )
-        sunit = 'ppt'
     elif (varname.upper() == "ETNO3_C2H6"):
         sdata = ( obs["EtONO2_WAS"] /
                   obs["Ethane_WAS"] )
@@ -113,7 +164,7 @@ def extract_seac4rs(obs,varname,
         sunit = 'ppt / ppt'
     else:
         sdata = obs[varname]
-        sunit = 'ppt'
+
     
     # Restrict altitude range, if required
     if altrange is not None:
