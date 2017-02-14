@@ -33,6 +33,7 @@ parser.add_argument("--datadir", dest = "datadir", default = "/short/m19/jaf574/
 parser.add_argument("--FRAPPE", help="Overplot FRAPPE data?", action="store_true")
 parser.add_argument("--SEAC4RS", help="Overplot SEAC4RS data?", action="store_true")
 parser.add_argument("--HIPPO", help="Overplot HIPPO data?", action="store_true")
+parser.add_argument("--maxdata", type = float, default = None, help="max data value for axes/colorbar (will change for all species plotted")
 
 # store in args
 args = parser.parse_args()
@@ -124,18 +125,31 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
 
     for v in var:
         
-        if v == 'ETNO3_C2H6':
-            maxdata=0.010
-        elif v == 'C1-C3_RONO2':
-            maxdata=50
-        elif v == 'MENO3' or v == 'PRNO3':
-            maxdata=20
-        elif v == 'ETNO3':
-            maxdata=30
-        elif v == 'C3H8':
-            maxdata=3000.
+        if args.maxdata == None:
+           if v == 'ETNO3_C2H6':
+               maxdata=0.010
+           elif v == 'C1-C3_RONO2':
+               maxdata=50
+           elif v == 'MENO3' or v == 'PRNO3' or v == 'IPRNO3':
+               maxdata=20
+           elif v == 'NPRNO3':
+               maxdata=5
+           elif v == 'ETNO3':
+               maxdata=30
+           elif v == 'C3H8':
+               maxdata=3000.
+           elif v == 'NO2':
+               maxdata=1500.
+           elif v == 'NOX':
+               maxdata=1500.
+           elif v == 'PAN':
+               maxdata=600.
+           elif v == 'O3':
+               maxdata=100.
+           else:
+               maxdata=None
         else:
-            maxdata=None
+           maxdata = args.maxdata
     
         # Get HIPPO data
         if args.HIPPO:
@@ -179,7 +193,7 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
         if args.FRAPPE:
             lonrange=[-110,-100]
             latrange=[37,42]
-            fdata = extract_seac4rs(frappe_obs,gcname_to_seacname(v),
+            fdata = extract_seac4rs(frappe_obs,gcname_to_frappname(v),
                                   lonrange=lonrange,latrange=latrange,
                                   altrange=altrange,dayrange=dayrange)
             
