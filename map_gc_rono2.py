@@ -305,10 +305,10 @@ def profile_gc(varname,filename,savefig=False,airdata=None,airname='',
         pairdata = pairdata[~numpy.isnan(pairdata)]
 
         # TODO: figure out how to treat masked values properly! but for now
-        airlon = airlon[pairdata >= -99999]
-        airlat = airlat[pairdata >= -99999]
-        airalt = airalt[pairdata >= -99999]
-        pairdata = pairdata[pairdata >= -99999]
+        airlon = airlon[pairdata > -7777]
+        airlat = airlat[pairdata > -7777]
+        airalt = airalt[pairdata > -7777]
+        pairdata = pairdata[pairdata > -7777]
 
         # bin data by altitude
         pairmed = binned_statistic(airalt,pairdata,'median',
