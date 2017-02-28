@@ -41,48 +41,7 @@ def read_ict(fname):
     return(data)
 
 #------------------------------------------------------------------------------
-## SEAC4RS
-
-
-def gcname_to_seacname(argument):
-    
-    """ Converts from GEOS-Chem species name to SEAC4RS data field name"""
-    
-    # Default return original name if not found (may be special case)
-    origname=argument
-    switcher = {
-        "MeNO3": "MeONO2_WAS",
-        "MeNO3".lower(): "MeONO2_WAS",
-        "MeNO3".upper(): "MeONO2_WAS",
-        "EtNO3": "EtONO2_WAS",
-        "EtNO3".lower(): "EtONO2_WAS",
-        "EtNO3".upper(): "EtONO2_WAS",
-        "iPrNO3": "iPrONO2_WAS",
-        "iPrNO3".lower(): "iPrONO2_WAS",
-        "iPrNO3".upper(): "iPrONO2_WAS",
-        "nPrNO3": "nPrONO2_WAS",
-        "nPrNO3".lower(): "nPrONO2_WAS",
-        "nPrNO3".upper(): "nPrONO2_WAS",
-        "C2H6": "Ethane_WAS",
-        "c2h6": "Ethane_WAS",
-        "C3H8": "Propane_WAS",
-        "c3h8": "Propane_WAS",
-        "ALD2": "Acetaldehyde",
-        "ald2": "Acetaldehyde",
-        "ACET": "Acetone_Propanal",
-        "acet": "Acetone_Propanal",
-        "NO2": "NO2_TDLIF",
-        "no2": "NO2_TDLIF",
-        "PAN": "PAN_GTCIMS",
-        "pan": "PAN_GTCIMS",
-        "O3": "O3_ESRL",
-        "o3": "O3_ESRL"
-    }
-    return switcher.get(argument, origname)
-
 ## FRAPPE
-
-
 def gcname_to_frappname(argument):
     
     """ Converts from GEOS-Chem species name to FRAPPE data field name"""
@@ -90,37 +49,133 @@ def gcname_to_frappname(argument):
     # Default return original name if not found (may be special case)
     origname=argument
     switcher = {
-        "MeNO3": "MeONO2_WAS",
-        "MeNO3".lower(): "MeONO2_WAS",
-        "MeNO3".upper(): "MeONO2_WAS",
-        "EtNO3": "EtONO2_WAS",
-        "EtNO3".lower(): "EtONO2_WAS",
-        "EtNO3".upper(): "EtONO2_WAS",
-        "iPrNO3": "iPrONO2_WAS",
-        "iPrNO3".lower(): "iPrONO2_WAS",
-        "iPrNO3".upper(): "iPrONO2_WAS",
-        "nPrNO3": "nPrONO2_WAS",
-        "nPrNO3".lower(): "nPrONO2_WAS",
-        "nPrNO3".upper(): "nPrONO2_WAS",
+        "MENO3": "MeONO2_WAS",
+        "ETNO3": "EtONO2_WAS",
+        "IPRNO3": "iPrONO2_WAS",
+        "NPRNO3": "nPrONO2_WAS",
+        "ANS": "ANs_LIF",
         "C2H6": "Ethane_WAS",
-        "c2h6": "Ethane_WAS",
         "C3H8": "Propane_WAS",
-        "c3h8": "Propane_WAS",
         "ALD2": "Acetaldehyde_MixingRatio",
-        "ald2": "Acetaldehyde_MixingRatio",
         "ACET": "AcetonePropanal_MixingRatio",
-        "acet": "AcetonePropanal_MixingRatio",
         "NO2": "NO2_MixingRatio",
-        "no2": "NO2_MixingRatio",
         "PAN": "PAN",
-        "pan": "PAN",
         "O3": "O3_MixingRatio",
-        "o3": "O3_MixingRatio"
     }
-    return switcher.get(argument, origname)
+    return switcher.get(argument.upper(), origname)
+
+## SEAC4RS
+def gcname_to_seacname(argument):
+    
+    """ Converts from GEOS-Chem species name to SEAC4RS data field name"""
+    
+    # Default return original name if not found (may be special case)
+    origname=argument
+    switcher = {
+        "MENO3": "MeONO2_WAS",
+        "ETNO3": "EtONO2_WAS",
+        "IPRNO3": "iPrONO2_WAS",
+        "NPRNO3": "nPrONO2_WAS",
+        "ANS": "ANs_TDLIF",
+        "C2H6": "Ethane_WAS",
+        "C3H8": "Propane_WAS",
+        "ALD2": "Acetaldehyde",
+        "ACET": "Acetone_Propanal",
+        "NO2": "NO2_TDLIF",
+        "PAN": "PAN_GTCIMS",
+        "O3": "O3_ESRL",
+    }
+    return switcher.get(argument.upper(), origname)
+
+## DC3
+def gcname_to_dc3name(argument):
+    
+    """ Converts from GEOS-Chem species name to DC-3 data field name"""
+    
+    # Default return original name if not found (may be special case)
+    origname=argument
+    switcher = {
+        "MENO3": "MeONO2_WAS",
+        "ETNO3": "EtONO2_WAS",
+        "IPRNO3": "iPrONO2_WAS",
+        "NPRNO3": "nPrONO2_WAS",
+        "ANS": "ANs_TDLIF",
+        "C2H6": "Ethane_WAS",
+        "C3H8": "Propane_WAS",
+        "ALD2": "Acetaldehyde_PTRMS",
+        "ACET": "Acetone_Propanal_PTRMS",
+        "NO2": "NO2_TDLIF",
+        "PAN": "PAN_GTCIMS",
+        "O3": "O3_ESRL",
+    }
+    return switcher.get(argument.upper(), origname)
+
+## CalNex
+def gcname_to_calname(argument):
+    
+    """ Converts from GEOS-Chem species name to CalNex data field name"""
+    
+    # Default return original name if not found (may be special case)
+    origname=argument
+    switcher = {
+        "MENO3": "MeONO2",
+        "ETNO3": "EtONO2",
+        "IPRNO3": "i_PrONO2",
+        "NPRNO3": "n_PrONO2",
+        "C2H6": "Ethane",
+        "C3H8": "Propane",
+        "ALD2": "Acetaldehyde",
+        "ACET": "Acetone",
+        "NO2": "NO2_ppbv",
+        "PAN": "PAN_ppbv",
+        "O3": "O3_ppbv",
+    }
+    return switcher.get(argument.upper(), origname)
+
+## ARCTAS
+def gcname_to_arcname(argument):
+    
+    """ Converts from GEOS-Chem species name to ARCTAS data field name"""
+    
+    # Default return original name if not found (may be special case)
+    origname=argument
+    switcher = {
+        "MENO3": "MeONO2",
+        "ETNO3": "EtONO2",
+        "IPRNO3": "iPrONO2",
+        "NPRNO3": "nPrONO2",
+        "ANS": "ANs_UCB",
+        "C2H6": "Ethane",
+        "C3H8": "Propane",
+        "ALD2": "Acetaldehyde_TOGA",
+        "ACET": "Acetone_TOGA",
+        "NO2": "NO2_NCAR",
+        "PAN": "GT_PAN",
+        "O3": "O3",
+    }
+    return switcher.get(argument.upper(), origname)
+
+## TexAQS
+def gcname_to_texname(argument):
+    
+    """ Converts from GEOS-Chem species name to TexAQS data field name"""
+    
+    # Default return original name if not found (may be special case)
+    origname=argument
+    switcher = {
+        "MENO3": "Methyl_nitrate_Atlas",
+        "ETNO3": "Ethyl_nitrate_Atlas",
+        "IPRNO3": "Isopropyl_nitrate_Atlas",
+        "NPRNO3": "n_Propylnitrate_Atlas",
+        "NO2": "NO2_ppbv_Ryerson",
+        "PAN": "PAN_pptv_Flocke",
+    }
+    return switcher.get(argument.upper(), origname)
+
 
 def extract_seac4rs(obs,varname,
-                  altrange=None,latrange=None,lonrange=None,dayrange=None):
+                  altrange=None,latrange=None,lonrange=None,dayrange=None,altunit="km",
+		  lonname = "LONGITUDE",latname="LATITUDE",altname="ALTP",dayname="JDAY"):
     
     """ Extracts SEAC4RS data & lon/lat/alt fields for a given species.
     Requires:
@@ -131,10 +186,17 @@ def extract_seac4rs(obs,varname,
        altrange = range of altitude to limit data extracted (default=all)"""
     
     # Get essential fields
-    slon = obs["LONGITUDE"]
-    slat = obs["LATITUDE"]
-    salt = obs["ALTP"]
-    sday = obs["JDAY"]
+    #slon = obs["LONGITUDE"]
+    #slat = obs["LATITUDE"]
+    #salt = obs["ALTP"]
+    #sday = obs["JDAY"]
+    slon = obs[lonname]
+    slat = obs[latname]
+    salt = obs[altname]
+    sday = obs[dayname]
+
+    # Fix altitudes - convert from m to km
+    if altunit=="m": salt = salt*1e-3
     
     # Fix SEAC4RS longitude ([-180,180] from [0,360])
     slon[slon > 180] = slon[slon > 180] - 360.
@@ -165,7 +227,6 @@ def extract_seac4rs(obs,varname,
     else:
         sdata = obs[varname]
 
-    
     # Restrict altitude range, if required
     if altrange is not None:
         ind = numpy.where( (salt >= altrange[0]) &
@@ -239,24 +300,14 @@ def gcname_to_hname(argument):
     # Default return original name if not found (may be special case)
     origname=argument
     switcher = {
-        "MeNO3": "MeONO2_AW",
-        "MeNO3".lower(): "MeONO2_AW",
-        "MeNO3".upper(): "MeONO2_AW",
-        "EtNO3": "EthONO2_AW",
-        "EtNO3".lower(): "EthONO2_AW",
-        "EtNO3".upper(): "EthONO2_AW",
-        "iPrNO3": "i_PropONO2_AW",
-        "iPrNO3".lower(): "i_PropONO2_AW",
-        "iPrNO3".upper(): "i_PropONO2_AW",
-        "nPrNO3": "n_PropONO2_AW",
-        "nPrNO3".lower(): "n_PropONO2_AW",
-        "nPrNO3".upper(): "n_PropONO2_AW",
+        "MENO3": "MeONO2_AW",
+        "ETNO3": "EthONO2_AW",
+        "IPRNO3": "i_PropONO2_AW",
+        "NPRNO3": "n_PropONO2_AW",
         "C2H6": "Ethane_AW",
-        "c2h6": "Ethane_AW",
         "C3H8": "Propane",
-        "c3h8": "Propane"
     }
-    return switcher.get(argument, origname)
+    return switcher.get(argument.upper(), origname)
 
 def extract_hippo(obs,varname,
                   altrange=None,latrange=None,lonrange=None,dayrange=None):
