@@ -6,7 +6,7 @@ Created on Wed Jul 13 17:47:02 2016
 @author: jennyf
 """
 ## For debugging as needed
-#import pdb
+import pdb
 
 ### LET'S DO THIS!
 import os 
@@ -33,6 +33,7 @@ parser.add_argument("--datadir", dest = "datadir", default = "/short/m19/jaf574/
 parser.add_argument("--FRAPPE", help="Overplot FRAPPE data?", action="store_true")
 parser.add_argument("--SEAC4RS", help="Overplot SEAC4RS data?", action="store_true")
 parser.add_argument("--HIPPO", help="Overplot HIPPO data?", action="store_true")
+parser.add_argument("--TEXAQS", help="Overplot TEXAQS data?", action="store_true")
 parser.add_argument("--maxdata", type = float, default = None, help="max data value for axes/colorbar (will change for all species plotted")
 
 # store in args
@@ -40,11 +41,10 @@ args = parser.parse_args()
 var = args.var
 
 def set_files(month):
-    # SEAC4RS data in this month?
+    # Aircraft data in this month?
     SEAC4RS = False
-    
-    # FRAPPE data in this month?
     FRAPPE = False
+    TEXAQS = False
     
     filename=[]
     for m in month:
@@ -59,6 +59,8 @@ def set_files(month):
             SEAC4RS=True
         if m == 7 or m == 8:
             FRAPPE=True
+        if m == 9 or m == 10:
+            TEXAQS=True
             
     filename2=[]
     if args.mod_dir2 is not None:
@@ -70,7 +72,7 @@ def set_files(month):
             else:
                 sys.exit("file type not allowed!")
 
-    return filename, filename2, SEAC4RS, FRAPPE
+    return filename, filename2, SEAC4RS, FRAPPE, TEXAQS
 
 
 def read_files_hippo():
@@ -120,8 +122,28 @@ def read_files_frappe():
     
     return frappe_obs
 
+def read_files_texaqs():
+    
+    first=True
+    DataDir = args.datadir+'TexasAQS/'
+
+    # Loop over files to read in data
+    for file in os.listdir(DataDir):
+        
+       print ("Reading "+DataDir+file)
+   
+       if first:
+           texaqs_obs = read_ict(DataDir+file)                 # read data
+           first=False                                          # reset logical
+       else:
+           tmp_data = read_ict(DataDir+file)                    # read data
+           texaqs_obs=numpy.ma.concatenate((texaqs_obs,tmp_data))    # concatenate, maintaining missing values
+    
+    return texaqs_obs
+
 #### PROFILES OF DIFFERENT SPECIES FOR DIFFERENT SPECIES & DIFFERENT MONTHS
-def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12],region='NPac',dalt=0.5): 
+def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,texaqs_obs=None,
+             altrange=[0,12],region='NPac',dalt=0.5): 
 
     for v in var:
         
@@ -202,6 +224,21 @@ def profiles(var,hippo_obs=None,seac4rs_obs=None,frappe_obs=None,altrange=[0,12]
                             lonrange=lonrange,latrange=latrange,altrange=altrange,
                             airdata=fdata,airname='FRAPPE_',maxdata=maxdata,dalt=dalt)
 
+        # Get TEXAQS data
+        if args.TEXAQS:
+            lonrange=[-100,-93]
+            latrange=[28,35]
+            tdata = extract_seac4rs(texaqs_obs,gcname_to_texname(v),
+                                  lonrange=lonrange,latrange=latrange,
+                                  altrange=altrange,dayrange=None,altunit="m",    # TODO: fix day treatment for TexAQS
+				  lonname="GpsLon_Aiken",latname="GpsLat_Aiken",
+                                  altname="PAlt_Aiken",dayname="Mid_UTC")         # TODO: fix day treatment for TexAQS
+            
+            GC = profile_gc(v,filename,filename2=filename2,ftype=args.ftype,
+                            savefig=False,title='TexasAQS '+v,
+                            lonrange=lonrange,latrange=latrange,altrange=altrange,
+                            airdata=tdata,airname='TEXAQS_',maxdata=maxdata,dalt=dalt)
+
         # Model only at this point??
         if GConly:
             lonrange=[-180,180]
@@ -255,18 +292,21 @@ dayrange=[doy0[month[0]-1],doy1[month[-1]-1]]
 hippo_obs = None
 seac4rs_obs = None
 frappe_obs = None
+texaqs_obs = None
 
 # Set-up: Files
-filename, filename2, SEAC4RS, FRAPPE = set_files(month)
+filename, filename2, SEAC4RS, FRAPPE, TEXAQS = set_files(month)
 if args.FRAPPE:
    frappe_obs = read_files_frappe()
+if args.TEXAQS:
+   texaqs_obs = read_files_texaqs()
 if args.SEAC4RS:
    seac4rs_obs = read_files_seac4rs()
 if args.HIPPO:
    hippo_obs = read_files_hippo()
 
 # Model only?
-if args.FRAPPE or args.SEAC4RS or args.HIPPO:
+if args.FRAPPE or args.SEAC4RS or args.HIPPO or args.TEXAQS:
     GConly = False
 else:
     GConly = True
@@ -280,5 +320,5 @@ altrange=[8,12]
 
 #### PROFILES OF DIFFERENT SPECIES FOR DIFFERENT SPECIES & DIFFERENT MONTHS
 region='NPac'
-profiles(var,hippo_obs=hippo_obs,seac4rs_obs=seac4rs_obs,frappe_obs=frappe_obs,region=region)
+profiles(var,hippo_obs=hippo_obs,seac4rs_obs=seac4rs_obs,frappe_obs=frappe_obs,texaqs_obs=texaqs_obs,region=region)
 
